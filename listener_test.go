@@ -2,6 +2,7 @@ package pgnotify_test
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -49,6 +50,23 @@ func TestNewListener_panics_on_nil_connect(t *testing.T) {
 	}()
 
 	pgnotify.NewListener(nil)
+}
+
+func TestListen_returns_error_on_second_call(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	l := pgnotify.NewListener(pgnotify.NopConnect)
+
+	// First Listen will fail immediately because NopConnect returns an error,
+	// but it still marks the listener as started.
+	_ = l.Listen(ctx)
+	cancel()
+
+	err := l.Listen(t.Context())
+	if !errors.Is(err, pgnotify.ErrAlreadyListening) {
+		t.Fatalf("expected ErrAlreadyListening, got %v", err)
+	}
 }
 
 func TestNewListener_options(t *testing.T) {

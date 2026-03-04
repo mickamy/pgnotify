@@ -2,8 +2,10 @@ package pgnotify
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -25,6 +27,7 @@ type Listener struct {
 	mu       sync.Mutex
 	handlers map[string][]handler
 	closers  []func()
+	started  atomic.Bool
 }
 
 // Option configures a Listener.
@@ -61,18 +64,24 @@ func NewListener(connect func(ctx context.Context) (*pgx.Conn, error), opts ...O
 	return l
 }
 
+// ErrAlreadyListening is returned when Listen is called more than once.
+var ErrAlreadyListening = errors.New("pgnotify: listener already started")
+
 // Listen starts listening for notifications and blocks until ctx is cancelled
 // or an unrecoverable error occurs. All subscription channels are closed when Listen returns.
+// Listen can only be called once per Listener.
 func (l *Listener) Listen(ctx context.Context) error {
+	if !l.started.CompareAndSwap(false, true) {
+		return ErrAlreadyListening
+	}
+
 	defer l.closeAll()
 
 	inner := &pgxlisten.Listener{
 		Connect: l.connect,
 	}
 
-	if l.reconnectDelay > 0 {
-		inner.ReconnectDelay = l.reconnectDelay
-	}
+	inner.ReconnectDelay = l.reconnectDelay
 
 	if l.logError != nil {
 		inner.LogError = l.logError
