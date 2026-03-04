@@ -24,6 +24,7 @@ type Listener struct {
 
 	mu       sync.Mutex
 	handlers map[string][]handler
+	closers  []func()
 }
 
 // Option configures a Listener.
@@ -60,6 +61,8 @@ func NewListener(connect func(ctx context.Context) (*pgx.Conn, error), opts ...O
 // Listen starts listening for notifications and blocks until ctx is cancelled
 // or an unrecoverable error occurs. All subscription channels are closed when Listen returns.
 func (l *Listener) Listen(ctx context.Context) error {
+	defer l.closeAll()
+
 	inner := &pgxlisten.Listener{
 		Connect: l.connect,
 	}
@@ -100,10 +103,29 @@ func (l *Listener) Listen(ctx context.Context) error {
 }
 
 // addHandler registers a handler for the given channel.
-// It is safe to call before or during Listen.
+// It must be called before Listen.
 func (l *Listener) addHandler(channel string, h handler) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	l.handlers[channel] = append(l.handlers[channel], h)
+}
+
+// addCloser registers a function to be called when Listen returns.
+func (l *Listener) addCloser(f func()) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.closers = append(l.closers, f)
+}
+
+func (l *Listener) closeAll() {
+	l.mu.Lock()
+	closers := l.closers
+	l.closers = nil
+	l.mu.Unlock()
+
+	for _, f := range closers {
+		f()
+	}
 }

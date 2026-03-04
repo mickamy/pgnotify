@@ -7,6 +7,11 @@ func (l *Listener) ExportAddHandler(channel string, h func(*pgconn.Notification)
 	l.addHandler(channel, h)
 }
 
+// ExportCloseAll exposes closeAll for testing.
+func (l *Listener) ExportCloseAll() {
+	l.closeAll()
+}
+
 // ExportHandlers returns the registered handlers for a channel.
 func (l *Listener) ExportHandlers(channel string) []func(*pgconn.Notification) {
 	l.mu.Lock()

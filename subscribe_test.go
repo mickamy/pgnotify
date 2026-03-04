@@ -102,6 +102,20 @@ func TestSubscribe(t *testing.T) {
 		}
 	})
 
+	t.Run("channel is closed after closeAll", func(t *testing.T) {
+		t.Parallel()
+
+		l := pgnotify.NewListener(nil)
+		ch := pgnotify.Subscribe[event](l, "ch")
+
+		l.ExportCloseAll()
+
+		_, ok := <-ch
+		if ok {
+			t.Fatal("expected channel to be closed")
+		}
+	})
+
 	t.Run("no error handler does not panic", func(t *testing.T) {
 		t.Parallel()
 

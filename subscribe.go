@@ -43,6 +43,7 @@ func Subscribe[T any](l *Listener, channel string, opts ...SubscribeOption) <-ch
 	}
 
 	ch := make(chan T, cfg.bufferSize)
+	l.addCloser(func() { close(ch) })
 
 	l.addHandler(channel, func(notification *pgconn.Notification) {
 		var v T
