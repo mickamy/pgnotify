@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 
@@ -41,19 +42,33 @@ func TestListener_addHandler(t *testing.T) {
 func TestNewListener_options(t *testing.T) {
 	t.Parallel()
 
-	var logCalled bool
+	t.Run("WithReconnectDelay sets delay", func(t *testing.T) {
+		t.Parallel()
 
-	l := pgnotify.NewListener(
-		nil,
-		pgnotify.WithReconnectDelay(0),
-		pgnotify.WithLogError(func(_ context.Context, _ error) {
-			logCalled = true
-		}),
-	)
+		l := pgnotify.NewListener(nil, pgnotify.WithReconnectDelay(3*time.Second))
 
-	if l == nil {
-		t.Fatal("NewListener returned nil")
-	}
+		if got := l.ExportReconnectDelay(); got != 3*time.Second {
+			t.Errorf("reconnectDelay = %v, want 3s", got)
+		}
+	})
 
-	_ = logCalled
+	t.Run("WithLogError sets callback", func(t *testing.T) {
+		t.Parallel()
+
+		l := pgnotify.NewListener(nil, pgnotify.WithLogError(func(_ context.Context, _ error) {}))
+
+		if !l.ExportHasLogError() {
+			t.Error("expected logError to be set")
+		}
+	})
+
+	t.Run("defaults without options", func(t *testing.T) {
+		t.Parallel()
+
+		l := pgnotify.NewListener(nil)
+
+		if l.ExportHasLogError() {
+			t.Error("expected logError to be nil by default")
+		}
+	})
 }

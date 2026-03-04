@@ -116,6 +116,42 @@ func TestSubscribe(t *testing.T) {
 		}
 	})
 
+	t.Run("WithBufferSize clamps zero to 1", func(t *testing.T) {
+		t.Parallel()
+
+		l := pgnotify.NewListener(nil)
+		ch := pgnotify.Subscribe[event](l, "ch", pgnotify.WithBufferSize(0))
+
+		handlers := l.ExportHandlers("ch")
+		handlers[0](&pgconn.Notification{
+			Channel: "ch",
+			Payload: `{"id":1,"name":"a"}`,
+		})
+
+		got := <-ch
+		if got.ID != 1 {
+			t.Errorf("got %+v, want {ID:1 Name:a}", got)
+		}
+	})
+
+	t.Run("WithBufferSize clamps negative to 1", func(t *testing.T) {
+		t.Parallel()
+
+		l := pgnotify.NewListener(nil)
+		ch := pgnotify.Subscribe[event](l, "ch", pgnotify.WithBufferSize(-5))
+
+		handlers := l.ExportHandlers("ch")
+		handlers[0](&pgconn.Notification{
+			Channel: "ch",
+			Payload: `{"id":1,"name":"a"}`,
+		})
+
+		got := <-ch
+		if got.ID != 1 {
+			t.Errorf("got %+v, want {ID:1 Name:a}", got)
+		}
+	})
+
 	t.Run("no error handler does not panic", func(t *testing.T) {
 		t.Parallel()
 

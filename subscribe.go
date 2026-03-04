@@ -17,8 +17,12 @@ type subscribeConfig struct {
 type SubscribeOption func(*subscribeConfig)
 
 // WithBufferSize sets the channel buffer size. Default is 64.
+// Values less than 1 are clamped to 1.
 func WithBufferSize(n int) SubscribeOption {
 	return func(c *subscribeConfig) {
+		if n < 1 {
+			n = 1
+		}
 		c.bufferSize = n
 	}
 }

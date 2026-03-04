@@ -1,6 +1,10 @@
 package pgnotify
 
-import "github.com/jackc/pgx/v5/pgconn"
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgconn"
+)
 
 // ExportAddHandler exposes addHandler for testing.
 func (l *Listener) ExportAddHandler(channel string, h func(*pgconn.Notification)) {
@@ -10,6 +14,16 @@ func (l *Listener) ExportAddHandler(channel string, h func(*pgconn.Notification)
 // ExportCloseAll exposes closeAll for testing.
 func (l *Listener) ExportCloseAll() {
 	l.closeAll()
+}
+
+// ExportReconnectDelay returns the configured reconnect delay.
+func (l *Listener) ExportReconnectDelay() time.Duration {
+	return l.reconnectDelay
+}
+
+// ExportHasLogError returns whether a logError callback is configured.
+func (l *Listener) ExportHasLogError() bool {
+	return l.logError != nil
 }
 
 // ExportHandlers returns the registered handlers for a channel.
