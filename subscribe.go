@@ -31,7 +31,7 @@ func WithErrorHandler(f func(error)) SubscribeOption {
 }
 
 // Subscribe registers a typed subscription on the given channel and returns a receive-only channel.
-// The returned channel is closed when Listener.Listen returns.
+// It must be called before Listener.Listen. The returned channel is closed when Listen returns.
 //
 // If the internal buffer is full, the notification is dropped and the error handler is called.
 func Subscribe[T any](l *Listener, channel string, opts ...SubscribeOption) <-chan T {
