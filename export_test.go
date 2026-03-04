@@ -1,10 +1,19 @@
 package pgnotify
 
 import (
+	"context"
+	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
+
+// NopConnect is a connect function for testing that always returns an error.
+// It satisfies the non-nil requirement of NewListener without needing a real database.
+var NopConnect = func(_ context.Context) (*pgx.Conn, error) {
+	return nil, errors.New("nop connect: not implemented")
+}
 
 // ExportAddHandler exposes addHandler for testing.
 func (l *Listener) ExportAddHandler(channel string, h func(*pgconn.Notification)) {

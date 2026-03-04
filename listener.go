@@ -47,6 +47,9 @@ func WithLogError(f func(context.Context, error)) Option {
 // NewListener creates a new Listener.
 // The connect function is called to establish (and re-establish) the PostgreSQL connection.
 func NewListener(connect func(ctx context.Context) (*pgx.Conn, error), opts ...Option) *Listener {
+	if connect == nil {
+		panic("connect function cannot be nil")
+	}
 	l := &Listener{
 		connect:        connect,
 		reconnectDelay: defaultReconnectDelay,

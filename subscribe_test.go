@@ -21,7 +21,7 @@ func TestSubscribe(t *testing.T) {
 	t.Run("delivers decoded event to channel", func(t *testing.T) {
 		t.Parallel()
 
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		ch := pgnotify.Subscribe[event](l, "user_created")
 
 		handlers := l.ExportHandlers("user_created")
@@ -44,7 +44,7 @@ func TestSubscribe(t *testing.T) {
 		t.Parallel()
 
 		var gotErr error
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		_ = pgnotify.Subscribe[event](l, "ch", pgnotify.WithErrorHandler(func(err error) {
 			gotErr = err
 		}))
@@ -65,7 +65,7 @@ func TestSubscribe(t *testing.T) {
 
 		var gotErr error
 		var mu sync.Mutex
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		_ = pgnotify.Subscribe[event](l, "ch",
 			pgnotify.WithBufferSize(1),
 			pgnotify.WithErrorHandler(func(err error) {
@@ -105,7 +105,7 @@ func TestSubscribe(t *testing.T) {
 	t.Run("channel is closed after closeAll", func(t *testing.T) {
 		t.Parallel()
 
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		ch := pgnotify.Subscribe[event](l, "ch")
 
 		l.ExportCloseAll()
@@ -119,7 +119,7 @@ func TestSubscribe(t *testing.T) {
 	t.Run("WithBufferSize clamps zero to 1", func(t *testing.T) {
 		t.Parallel()
 
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		ch := pgnotify.Subscribe[event](l, "ch", pgnotify.WithBufferSize(0))
 
 		handlers := l.ExportHandlers("ch")
@@ -137,7 +137,7 @@ func TestSubscribe(t *testing.T) {
 	t.Run("WithBufferSize clamps negative to 1", func(t *testing.T) {
 		t.Parallel()
 
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		ch := pgnotify.Subscribe[event](l, "ch", pgnotify.WithBufferSize(-5))
 
 		handlers := l.ExportHandlers("ch")
@@ -155,7 +155,7 @@ func TestSubscribe(t *testing.T) {
 	t.Run("no error handler does not panic", func(t *testing.T) {
 		t.Parallel()
 
-		l := pgnotify.NewListener(nil)
+		l := pgnotify.NewListener(pgnotify.NopConnect)
 		_ = pgnotify.Subscribe[event](l, "ch")
 
 		handlers := l.ExportHandlers("ch")
