@@ -7,7 +7,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/mickamy/tapbox
+        - github.com/mickamy/pgnotify
 
 linters:
   default: all
